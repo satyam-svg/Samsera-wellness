@@ -175,7 +175,11 @@ export default function Home() {
                 ))}
               </div>
 
-              <button onClick={handleVerify} className="verify-button">
+              <button
+                onClick={handleVerify}
+                className="verify-button"
+                style={{ position: "relative", bottom: "25px" }}
+              >
                 Continue
               </button>
             </div>
