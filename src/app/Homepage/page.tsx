@@ -101,7 +101,7 @@ function Card({
         {items.map((item, index) => (
           <div key={index} className="flex flex-col ml-1">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-800">
-              <div className="w-6 h-6 rounded-full  bg-[rgba(232,140,124,0.26)] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full  bg-[#F38A6A]/10 flex items-center justify-center">
                 <Calendar size={14} />
               </div>
               {item.label}
