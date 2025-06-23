@@ -13,8 +13,10 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function EventsPage() {
+  const router = useRouter();
   return (
     <div className="flex justify-center items-center py-10 px-4">
       <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-6xl space-y-8">
@@ -57,7 +59,10 @@ export default function EventsPage() {
             <button className="flex items-center gap-2 border px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100 text-sm">
               <Share2 size={16} /> Share
             </button>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm shadow">
+            <button
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm shadow cursor-pointer"
+              onClick={() => router.push("/Homepage/Events/book/online")}
+            >
               📅 Register Now
             </button>
           </div>

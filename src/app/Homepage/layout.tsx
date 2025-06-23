@@ -10,16 +10,16 @@ import {
   Users,
   User2,
   Activity,
-  ChevronDown,
-  ChevronUp,
   Bell,
   Search,
   Menu,
 } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [isProfileOpen, setProfileOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[#fdf4f2]">
@@ -40,8 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } 
-        fixed md:static w-64 p-6 bg-[#fdf4f2] z-10 h-full transition-transform duration-300 ease-in-out md:block`}
+        } fixed md:static w-64 p-6 bg-[#fdf4f2] z-10 h-full transition-transform duration-300 ease-in-out md:block`}
       >
         <div className="flex flex-col items-start gap-2 pl-2">
           <Image
@@ -55,30 +54,54 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <p className="text-gray-500 text-sm">sarah@example.com</p>
         </div>
 
-        <nav className="mt-10 space-y-5 text-gray-700 text-sm">
-          <MenuItem icon={<CalendarDays size={18} />} label="Dashboard" />
-          <div>
-            <button
-              onClick={() => setProfileOpen(!isProfileOpen)}
-              className="w-full flex justify-between items-center text-left"
-            >
-              <MenuItem icon={<User size={18} />} label="Profile" />
-              {isProfileOpen ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              )}
-            </button>
-          </div>
-          <MenuItem icon={<BookOpen size={18} />} label="My Classes" />
-          <MenuItem icon={<Calendar size={18} />} label="Events" />
-          <MenuItem icon={<Users size={18} />} label="Group Classes" />
-          <MenuItem icon={<User2 size={18} />} label="1:1 Classes" />
-          <MenuItem icon={<Activity size={18} />} label="My Body" />
+        {/* Navigation */}
+        <nav className="mt-10 space-y-3 text-gray-700 text-sm">
+          <MenuItem
+            icon={<CalendarDays size={18} />}
+            label="Dashboard"
+            isActive={pathname === "/Homepage"}
+            onClick={() => router.push("/Homepage")}
+          />
+          <MenuItem
+            icon={<User size={18} />}
+            label="Profile"
+            isActive={pathname === "/Homepage/Profile"}
+            onClick={() => router.push("/Homepage/Profile")}
+          />
+          <MenuItem
+            icon={<BookOpen size={18} />}
+            label="My Classes"
+            isActive={pathname === "/Homepage/Classes"}
+            onClick={() => router.push("/Homepage/Classes")}
+          />
+          <MenuItem
+            icon={<Calendar size={18} />}
+            label="Events"
+            isActive={pathname.startsWith("/Homepage/Events")} // FIXED HERE
+            onClick={() => router.push("/Homepage/Events")}
+          />
+          <MenuItem
+            icon={<Users size={18} />}
+            label="Group Classes"
+            isActive={pathname.startsWith("/Homepage/Group")}
+            onClick={() => router.push("/Homepage/Group")}
+          />
+          <MenuItem
+            icon={<User2 size={18} />}
+            label="1:1 Classes"
+            isActive={pathname === "/Homepage/One-One-Classes"}
+            onClick={() => router.push("/Homepage/One-One-Classes")}
+          />
+          <MenuItem
+            icon={<Activity size={18} />}
+            label="My Body"
+            isActive={pathname === "/Homepage/My-Body"}
+            onClick={() => router.push("/Homepage/My-Body")}
+          />
         </nav>
       </aside>
 
-      {/* Overlay for mobile sidebar */}
+      {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-0 md:hidden"
@@ -88,7 +111,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
+        {/* Top bar */}
         <div className="hidden md:flex items-center justify-between px-6 py-3 bg-[#fdf4f2] mt-8">
           <div className="relative w-full max-w-md">
             <Search
@@ -109,7 +132,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Scrollable Content Area - Scrollbar Hidden */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {children}
         </div>
@@ -118,9 +141,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function MenuItem({ icon, label }: { icon: React.ReactNode; label: string }) {
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  isActive,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  isActive?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-3 px-1 py-1 hover:text-black cursor-pointer">
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-3 px-2 py-2 cursor-pointer rounded-md transition ${
+        isActive
+          ? "bg-white text-orange-600 font-semibold"
+          : "text-gray-700 hover:text-black"
+      }`}
+    >
       {icon}
       <span>{label}</span>
     </div>

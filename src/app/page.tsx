@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { MailIcon, UserIcon } from "lucide-react";
 import Lottie from "lottie-react";
 import successAnimation from "./sucess.json";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [role, setRole] = useState("Student");
@@ -12,6 +13,7 @@ export default function Home() {
   const [verificationCode, setVerificationCode] = useState(Array(4).fill(""));
   const [, setCircleSize] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter(); // ✅ Add router hook here
 
   useEffect(() => {
     if (containerRef.current && step === "success") {
@@ -26,7 +28,7 @@ export default function Home() {
     setStep("success");
     setTimeout(() => {
       console.log("Redirecting to dashboard...");
-      // router.push('/dashboard');
+      router.push("/Homepage");
     }, 3000);
   };
 
