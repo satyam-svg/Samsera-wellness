@@ -95,8 +95,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <MenuItem
             icon={<Activity size={18} />}
             label="My Body"
-            isActive={pathname === "/Homepage/My-Body"}
-            onClick={() => router.push("/Homepage/My-Body")}
+            isActive={pathname === "/Homepage/Mybody"}
+            onClick={() => router.push("/Homepage/Mybody")}
           />
         </nav>
       </aside>
