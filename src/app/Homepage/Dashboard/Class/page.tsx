@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Users,
-  UserCheck,
-  Calendar,
-  Clock,
-  Star,
-  TrendingUp,
-} from "lucide-react";
+import { Users, UserCheck, Calendar, Clock, Star } from "lucide-react";
 
 const TeachingDashboard = () => {
   // Sample data for the line chart
