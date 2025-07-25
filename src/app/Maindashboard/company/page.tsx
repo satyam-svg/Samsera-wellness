@@ -9,7 +9,7 @@ export default function WellnessDashboard() {
   const [activeContact, setActiveContact] = useState(1);
 
   return (
-    <div className="min-h-screen bg-[#fdf6f3] px-6 py-10">
+    <div className="min-h-screen bg-[#fdf6f3] px-6 ">
       {/* Main Outer Container */}
       <div className="w-full bg-white rounded-2xl shadow-md p-6 flex gap-6">
         {/* Left Content Box */}
