@@ -1,15 +1,124 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import {
   ChevronRight,
   Eye,
   Activity,
-  Moon,
   Target,
-  Dumbbell,
+  User,
+  Calendar,
 } from "lucide-react";
-import Image from "next/image";
 
-export default function DashboardLayout() {
+// Base URL utility (you can import this from your utils)
+import { BASE_URL } from "@/lib/utils";
+
+export default function ProfileDashboard() {
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Function to get cookie value
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  };
+
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const accessToken = getCookie("accessToken");
+
+        if (!accessToken) {
+          setError("Access token not found in cookies");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`${BASE_URL}/users/profile`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setProfileData(data);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Helper function to get dosha info
+  const getDoshaInfo = (bodyshape) => {
+    const doshaMap = {
+      Mesomorph: {
+        name: "Pitta",
+        description: "Athletic and muscular build with balanced energy",
+      },
+      Ectomorph: {
+        name: "Vata",
+        description: "Lean and light build with high energy",
+      },
+      Endomorph: {
+        name: "Kapha",
+        description: "Solid and stable build with steady energy",
+      },
+    };
+    return (
+      doshaMap[bodyshape] || {
+        name: "Unknown",
+        description: "Body type assessment needed",
+      }
+    );
+  };
+
+  // Helper function to convert height to feet and inches
+  const convertHeight = (heightCm) => {
+    if (!heightCm) return "Not set";
+    const totalInches = heightCm / 2.54;
+    const feet = Math.floor(totalInches / 12);
+    const inches = Math.round(totalInches % 12);
+    return `${feet}'${inches}"`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-4">Error loading profile</div>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const dosha = getDoshaInfo(profileData?.bodyshape);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header Box */}
@@ -42,20 +151,24 @@ export default function DashboardLayout() {
                 <div>
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-orange-600 text-sm">♂</span>
+                      <User className="w-4 h-4 text-orange-600" />
                     </div>
                     <span className="text-gray-600 text-sm">Gender</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">Male</p>
+                  <p className="text-2xl font-bold text-gray-900 capitalize">
+                    {profileData?.gender || "Not set"}
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-orange-600 text-sm">📅</span>
+                      <Calendar className="w-4 h-4 text-orange-600" />
                     </div>
                     <span className="text-gray-600 text-sm">Age</span>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">32 years</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {profileData?.age ? `${profileData.age} years` : "Not set"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -72,191 +185,88 @@ export default function DashboardLayout() {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 text-gray-600 text-sm font-medium">
-                        Measurement
-                      </th>
-                      <th className="text-left py-2 text-gray-600 text-sm font-medium">
-                        Current
-                      </th>
-                      <th className="text-left py-2 text-gray-600 text-sm font-medium">
-                        In CM
-                      </th>
-                      <th className="text-left py-2 text-gray-600 text-sm font-medium">
-                        Change
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="space-y-2">
-                    {[
-                      {
-                        measurement: "Height",
-                        current: "5'9\" cm",
-                        cm: "176 cm",
-                        change: "+2 cm",
-                        positive: true,
-                      },
-                      {
-                        measurement: "Weight",
-                        current: "75 kg",
-                        cm: "78 kg",
-                        change: "-3 kg",
-                        positive: false,
-                      },
-                      {
-                        measurement: "Chest",
-                        current: "75 kg",
-                        cm: "78 kg",
-                        change: "-3 kg",
-                        positive: false,
-                      },
-                      {
-                        measurement: "Waist",
-                        current: "82 cm",
-                        cm: "85 cm",
-                        change: "-3 cm",
-                        positive: false,
-                      },
-                      {
-                        measurement: "Hips",
-                        current: "58 cm",
-                        cm: "60 cm",
-                        change: "-2 cm",
-                        positive: false,
-                      },
-                      {
-                        measurement: "Arms",
-                        current: "36 cm",
-                        cm: "35 cm",
-                        change: "+1 cm",
-                        positive: true,
-                      },
-                      {
-                        measurement: "Thighs",
-                        current: "58 cm",
-                        cm: "60 cm",
-                        change: "-2 cm",
-                        positive: false,
-                      },
-                      {
-                        measurement: "BMI",
-                        current: "88 cm",
-                        cm: "92 cm",
-                        change: "-4 cm",
-                        positive: false,
-                      },
-                      {
-                        measurement: "Body fat",
-                        current: "88 cm",
-                        cm: "92 cm",
-                        change: "-4 cm",
-                        positive: false,
-                      },
-                    ].map((row, index) => (
-                      <tr key={index} className="border-b border-gray-50">
-                        <td className="py-3 text-gray-900 text-sm">
-                          {row.measurement}
-                        </td>
-                        <td className="py-3 text-gray-900 text-sm font-medium">
-                          {row.current}
-                        </td>
-                        <td className="py-3 text-gray-600 text-sm">{row.cm}</td>
-                        <td className="py-3">
-                          <span
-                            className={`text-sm ${
-                              row.positive ? "text-green-600" : "text-green-600"
-                            }`}
-                          >
-                            {row.change}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-4 h-4 text-gray-400">📏</span>
+                    <span className="text-gray-900 text-sm">Height</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-900 font-medium">
+                      {convertHeight(profileData?.height)}
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      {profileData?.height
+                        ? `${profileData.height} cm`
+                        : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-4 h-4 text-gray-400">⚖️</span>
+                    <span className="text-gray-900 text-sm">Weight</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-900 font-medium">
+                      {profileData?.weight
+                        ? `${profileData.weight} kg`
+                        : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-4 h-4 text-gray-400">🏋️</span>
+                    <span className="text-gray-900 text-sm">Body Type</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-900 font-medium">
+                      {profileData?.bodyshape || "Not assessed"}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column */}
           <div className="lg:col-span-3 flex flex-col h-full space-y-6 mb-6">
-            {/* Lifestyle Conditions */}
+            {/* Focus Areas */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Lifestyle Conditions
+                Focus Areas
               </h2>
 
-              <div className="space-y-4">
-                <div className="border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-                        <Activity className="w-3 h-3 text-red-600" />
+              {profileData?.focusarea && profileData.focusarea.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {profileData.focusarea.map((area, index) => (
+                    <div
+                      key={index}
+                      className="border border-blue-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Activity className="w-3 h-3 text-blue-600" />
+                        </div>
+                        <span className="font-medium text-gray-900">
+                          {area}
+                        </span>
                       </div>
-                      <span className="font-medium text-gray-900">
-                        Hypertension
-                      </span>
+                      <p className="text-sm text-gray-600">
+                        Focused practice area for holistic wellness
+                      </p>
                     </div>
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                      Moderate
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Blood pressure consistently ranging between 130-139/80-89
-                    mmHg. Currently managed with lifestyle modifications.
-                  </p>
-                  <p className="text-sm text-gray-500">💊 Medication: None</p>
+                  ))}
                 </div>
-
-                <div className="border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 text-xs">😰</span>
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        Mild Anxiety
-                      </span>
-                    </div>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Controlled
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Occasional episodes of anxiety, primarily work-related.
-                    Managing through meditation and breathing exercises.
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    🧘 Therapy: Weekly mindfulness sessions
-                  </p>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>No focus areas set yet</p>
                 </div>
-
-                <div className="border border-purple-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Moon className="w-3 h-3 text-purple-600" />
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        Sleep Apnea
-                      </span>
-                    </div>
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                      Needs Attention
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Moderate obstructive sleep apnea with AHI of 22. Using CPAP
-                    therapy with moderate compliance.
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    🛏️ Treatment: CPAP therapy
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Dosha Profile */}
@@ -265,39 +275,36 @@ export default function DashboardLayout() {
                 Your Dosha Profile
               </h2>
 
-              <div className="flex items-center space-x-6">
-                <div className="w-24 h-24 flex-shrink-0 rounded-full bg-orange-50 flex items-center justify-center">
-                  <Image
-                    src="/images/pita.svg"
-                    alt="Dosha Symbol"
-                    width={96}
-                    height={96}
-                    className="rounded-full object-contain"
-                  />
-                </div>
+              {profileData?.bodyshape ? (
+                <div className="flex items-center space-x-6">
+                  <div className="w-24 h-24 flex-shrink-0 rounded-full bg-orange-50 flex items-center justify-center">
+                    <span className="text-3xl">🧘</span>
+                  </div>
 
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">
-                    Pitta-Vata Body Type
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Your dominant doshas are Pitta and Vata, indicating a
-                    balanced energy profile with both fire and air elements.
-                  </p>
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-1">
+                      {dosha.name} Body Type
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {dosha.description}
+                    </p>
 
-                  <div className="flex space-x-2">
-                    <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
-                      Energetic
-                    </span>
-                    <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
-                      Creative
-                    </span>
-                    <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
-                      Focused
-                    </span>
+                    <div className="flex space-x-2">
+                      <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                        {profileData.bodyshape}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <span className="text-4xl mb-3 block">🧘</span>
+                  <p>No dosha profile available</p>
+                  <p className="text-sm">
+                    Complete body assessment to see your dosha
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* My Goals */}
@@ -306,53 +313,49 @@ export default function DashboardLayout() {
                 My Goals
               </h2>
 
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Target className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Target Weight
-                      </span>
+              {profileData?.goal && profileData.goal.length > 0 ? (
+                <div className="space-y-4">
+                  {profileData.goal.map((goalItem, index) => (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <Target className="w-4 h-4 text-orange-500" />
+                          <span className="text-sm font-medium text-gray-900">
+                            {goalItem.name || `Goal ${index + 1}`}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {goalItem.target || "Target not set"}
+                        </span>
+                      </div>
+                      {goalItem.progress && (
+                        <>
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                            <div
+                              className="bg-orange-500 h-2 rounded-full"
+                              style={{
+                                width: `${Math.min(goalItem.progress, 100)}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Progress: {goalItem.progress}%</span>
+                            <span>{100 - goalItem.progress}% to go</span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <span className="text-sm text-gray-600">
-                      150 lbs (68 kg)
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                    <div
-                      className="bg-orange-500 h-2 rounded-full"
-                      style={{ width: "75%" }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Current: 154 lbs</span>
-                    <span>4 lbs to go</span>
-                  </div>
+                  ))}
                 </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Dumbbell className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Target Body Fat
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-600">18%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                    <div
-                      className="bg-orange-500 h-2 rounded-full"
-                      style={{ width: "60%" }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Current: 19.2%</span>
-                    <span>1.2% to go</span>
-                  </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>No goals set yet</p>
+                  <p className="text-sm">
+                    Set your fitness and wellness goals to track progress
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

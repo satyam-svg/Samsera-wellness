@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   CalendarDays,
@@ -15,11 +15,52 @@ import {
   Menu,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import Cookies from "js-cookie";
+import { BASE_URL } from "@/lib/utils";
+
+type UserProfile = {
+  name: string;
+  email: string;
+  profileImage?: string;
+  images?: { path: string }[];
+};
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // User state
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = Cookies.get("accessToken");
+      if (!token) {
+        setLoadingUser(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${BASE_URL}/users/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setLoadingUser(false);
+          return;
+        }
+        const data = await res.json();
+        setUser(data);
+      } catch {
+        // ignore
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[#fdf4f2]">
@@ -43,15 +84,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         } fixed md:static w-64 p-6 bg-[#fdf4f2] z-10 h-full transition-transform duration-300 ease-in-out md:block`}
       >
         <div className="flex flex-col items-start gap-2 pl-2">
-          <Image
-            src="https://randomuser.me/api/portraits/women/44.jpg"
-            width={80}
-            height={80}
-            className="rounded-full object-cover"
-            alt="Profile"
-          />
-          <h2 className="font-semibold text-[16px]">Sarah Mitchell</h2>
-          <p className="text-gray-500 text-sm">sarah@example.com</p>
+          {loadingUser ? (
+            <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse" />
+          ) : user ? (
+            <>
+              <Image
+                src={
+                  user.images && user.images.length > 0
+                    ? user.images[user.images.length - 1].path
+                    : user.profileImage || "/images/logo.svg"
+                }
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
+                alt={user.name || "Profile"}
+              />
+              <h2 className="font-semibold text-[16px]">{user.name}</h2>
+              <p className="text-gray-500 text-sm">{user.email}</p>
+            </>
+          ) : (
+            <>
+              <Image
+                src="/images/logo.svg"
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
+                alt="Profile"
+              />
+              <h2 className="font-semibold text-[16px]">Guest</h2>
+              <p className="text-gray-500 text-sm">Not signed in</p>
+            </>
+          )}
         </div>
 
         {/* Navigation */}
