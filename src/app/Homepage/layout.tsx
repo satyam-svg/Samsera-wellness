@@ -23,6 +23,7 @@ type UserProfile = {
   email: string;
   profileImage?: string;
   images?: { path: string }[];
+  role: string; // Added role field
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -61,7 +62,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
     fetchUser();
   }, []);
-
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[#fdf4f2]">
       {/* Mobile Top Bar */}
@@ -89,11 +89,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ) : user ? (
             <>
               <Image
-                src={
-                  user.images && user.images.length > 0
-                    ? user.images[user.images.length - 1].path
-                    : user.profileImage || "/images/logo.svg"
-                }
+                src={user.profileImage || "/images/logo.svg"}
                 width={80}
                 height={80}
                 className="rounded-full object-cover"
@@ -125,12 +121,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             isActive={pathname === "/Homepage"}
             onClick={() => router.push("/Homepage")}
           />
-          <MenuItem
-            icon={<User size={18} />}
-            label="Profile"
-            isActive={pathname === "/Homepage/Profile"}
-            onClick={() => router.push("/Homepage/Profile")}
-          />
+
+          {/* Conditionally show Profile section only for teachers */}
+          {user && user.role === "teacher" && (
+            <MenuItem
+              icon={<User size={18} />}
+              label="Profile"
+              isActive={pathname === "/Homepage/Profile"}
+              onClick={() => router.push("/Homepage/Profile")}
+            />
+          )}
+
           <MenuItem
             icon={<BookOpen size={18} />}
             label="My Classes"
@@ -140,7 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <MenuItem
             icon={<Calendar size={18} />}
             label="Events"
-            isActive={pathname.startsWith("/Homepage/Events")} // FIXED HERE
+            isActive={pathname.startsWith("/Homepage/Events")}
             onClick={() => router.push("/Homepage/Events")}
           />
           <MenuItem
@@ -152,8 +153,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <MenuItem
             icon={<User2 size={18} />}
             label="1:1 Classes"
-            isActive={pathname === "/Homepage/One-One-Classes"}
-            onClick={() => router.push("/Homepage/One-One-Classes")}
+            isActive={pathname === "/Homepage/onetoone"}
+            onClick={() => router.push("/Homepage/onetoone")}
           />
           <MenuItem
             icon={<Activity size={18} />}
